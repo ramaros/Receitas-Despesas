@@ -657,10 +657,12 @@ export default function App() {
               transactions={transactions}
               templates={templates}
               stats={stats}
+              currentMonth={currentMonth}
               onAddTransaction={() => {
                 setSelectedTransaction(null);
                 setIsFormOpen(true);
               }}
+              onTogglePaid={handleTogglePaid}
               onAddTemplate={handleAddTemplate}
               onToggleTemplate={handleToggleTemplate}
               onDeleteTemplate={handleDeleteTemplate}

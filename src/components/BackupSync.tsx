@@ -22,6 +22,7 @@ export default function BackupSync({
   const [syncSuccess, setSyncSuccess] = useState<string | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [importSuccess, setImportSuccess] = useState(false);
+  const [authError, setAuthError] = useState<{ code: string; message: string } | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -117,6 +118,7 @@ export default function BackupSync({
 
   // Login with Google
   const handleLogin = async () => {
+    setAuthError(null);
     try {
       setSyncLoading(true);
       const loggedUser = await signInWithGoogle();
@@ -124,7 +126,20 @@ export default function BackupSync({
       setSyncSuccess('Conectado ao Firebase com sucesso!');
       setTimeout(() => setSyncSuccess(null), 3000);
     } catch (error: any) {
-      alert(`Falha no login: ${error.message || error}`);
+      console.error("Erro no login Firebase:", error);
+      const errMsg = error.message || String(error);
+      if (
+        error.code === 'auth/unauthorized-domain' || 
+        errMsg.includes('unauthorized-domain') ||
+        errMsg.includes('auth/unauthorized-domain')
+      ) {
+        setAuthError({
+          code: 'unauthorized-domain',
+          message: 'O domínio do site não está autorizado no Firebase.'
+        });
+      } else {
+        alert(`Falha no login: ${errMsg}`);
+      }
     } finally {
       setSyncLoading(false);
     }
@@ -279,18 +294,53 @@ export default function BackupSync({
 
             {/* Sync connection bar */}
             {!user ? (
-              <button
-                onClick={handleLogin}
-                disabled={syncLoading}
-                className="flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold font-display text-sm transition-all shadow-sm active:scale-95"
-              >
-                {syncLoading ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                ) : (
-                  <LogIn className="w-4 h-4 text-white" />
+              <div className="space-y-4 w-full">
+                {authError && authError.code === 'unauthorized-domain' && (
+                  <div className="p-5 rounded-2xl bg-amber-50 border border-amber-200 text-slate-850 text-sm space-y-3 shadow-xs">
+                    <div className="flex items-center gap-2 text-amber-950 font-bold">
+                      <AlertTriangle className="w-5 h-5 shrink-0 text-amber-600" />
+                      <span>Domínio Não Autorizado (auth/unauthorized-domain)</span>
+                    </div>
+                    <div className="text-xs space-y-2.5 leading-relaxed text-slate-600 font-medium">
+                      <p>
+                        Por motivos de segurança, o Firebase bloqueia tentativas de login originadas de domínios que não estão cadastrados na lista de autorizados do seu projeto.
+                      </p>
+                      <p>
+                        Para habilitar o login neste endereço (<span className="text-slate-900 bg-amber-100 px-1.5 py-0.5 rounded font-mono font-bold">{typeof window !== 'undefined' ? window.location.hostname : 'ramaros.github.io'}</span>), siga estes passos simples:
+                      </p>
+                      <ol className="list-decimal pl-5 space-y-2 text-slate-700">
+                        <li>Acesse o <a href="https://console.firebase.google.com/" target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline font-bold inline-flex items-center gap-0.5">Console do Firebase <span className="text-[10px]">↗</span></a> e selecione seu projeto.</li>
+                        <li>No menu lateral esquerdo, vá em <strong className="text-slate-950">Criação (Build) &gt; Authentication</strong>.</li>
+                        <li>Clique na aba <strong className="text-slate-950">Configurações (Settings)</strong> na barra superior.</li>
+                        <li>No menu à esquerda das configurações, clique em <strong className="text-slate-950">Domínios Autorizados (Authorized domains)</strong>.</li>
+                        <li>Clique no botão <strong className="text-indigo-600 font-bold">Adicionar domínio (Add domain)</strong>.</li>
+                        <li>Cole exatamente o seguinte domínio e salve:
+                          <div className="mt-1.5 flex items-center gap-1.5">
+                            <span className="bg-white border border-slate-250 px-2 py-1 rounded font-mono text-slate-900 text-[11px] select-all font-bold shadow-2xs">
+                              {typeof window !== 'undefined' ? window.location.hostname : 'ramaros.github.io'}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-normal">(pode copiar e colar exatamente isto)</span>
+                          </div>
+                        </li>
+                        <li>Pronto! Aguarde cerca de 10 segundos para o Firebase atualizar e clique no botão abaixo para tentar conectar de novo.</li>
+                      </ol>
+                    </div>
+                  </div>
                 )}
-                Conectar com Conta do Google
-              </button>
+
+                <button
+                  onClick={handleLogin}
+                  disabled={syncLoading}
+                  className="flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold font-display text-sm transition-all shadow-sm active:scale-95"
+                >
+                  {syncLoading ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <LogIn className="w-4 h-4 text-white" />
+                  )}
+                  Conectar com Conta do Google
+                </button>
+              </div>
             ) : (
               <div className="space-y-4">
                 {/* Connected User Badge */}
