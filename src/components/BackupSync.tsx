@@ -323,6 +323,17 @@ export default function BackupSync({
                   </button>
                 </div>
 
+                {/* Real-time synchronization banner */}
+                <div className="p-4 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-800 text-xs flex items-start gap-3">
+                  <RefreshCw className="w-4 h-4 shrink-0 text-indigo-600 mt-0.5 animate-spin" style={{ animationDuration: '3s' }} />
+                  <div>
+                    <p className="font-bold">Sincronização em Tempo Real Ativa!</p>
+                    <p className="mt-0.5 leading-relaxed text-indigo-600 font-medium">
+                      O aplicativo agora salva automaticamente! Qualquer alteração (adicionar, editar ou excluir) é enviada instantaneamente para a nuvem e atualizada em seus outros celulares ou computadores em tempo real.
+                    </p>
+                  </div>
+                </div>
+
                 {/* Cloud Sync Actions */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {/* Upload to Cloud */}

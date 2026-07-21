@@ -205,10 +205,12 @@ export const getInitialData = () => {
     }
   }
 
-  // If transactions are empty, seed the current month
-  if (transactions.length === 0) {
+  // If transactions are empty and not initialized before, seed the current month
+  const isInitialized = localStorage.getItem('fin_initialized') === 'true';
+  if (transactions.length === 0 && !isInitialized) {
     transactions = defaultTransactions(currentMonthYear);
     localStorage.setItem('fin_transactions', JSON.stringify(transactions));
+    localStorage.setItem('fin_initialized', 'true');
   }
 
   return { transactions, templates, settings };

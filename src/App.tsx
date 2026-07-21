@@ -12,6 +12,7 @@ import {
   getInitialData,
   checkAndAutoCloneFixedItems,
 } from './utils/financeUtils';
+import { isFirebaseConfigured } from './firebase';
 
 // Subcomponents
 import Dashboard from './components/Dashboard';
@@ -32,6 +33,9 @@ export default function App() {
     lastActiveMonth: new Date().toISOString().substring(0, 7),
     autoCloneFixed: true,
   });
+
+  // User Authentication State
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   // UI/Navigation States
   const [currentMonth, setCurrentMonth] = useState<string>('');
@@ -57,6 +61,64 @@ export default function App() {
     setSettings(loadedSet);
   }, []);
 
+  // Monitor user session if Firebase is configured
+  useEffect(() => {
+    if (isFirebaseConfigured) {
+      import('./firebase').then(({ auth }) => {
+        if (auth) {
+          const unsubscribe = auth.onAuthStateChanged((fbUser) => {
+            setCurrentUser(fbUser);
+          });
+          return () => unsubscribe();
+        }
+      });
+    }
+  }, []);
+
+  // Real-time Firestore synchronizer
+  useEffect(() => {
+    if (!currentUser) return;
+
+    let unsubscribe: (() => void) | undefined;
+
+    import('./firebase').then(({ db }) => {
+      if (!db) return;
+      import('firebase/firestore').then(({ doc, onSnapshot }) => {
+        const userDocRef = doc(db, 'users', currentUser.uid);
+        unsubscribe = onSnapshot(userDocRef, (snapshot) => {
+          if (snapshot.exists()) {
+            const data = snapshot.data();
+            const cloudT = data.transactions || [];
+            const cloudTpl = data.templates || [];
+            
+            setTransactions((prevT) => {
+              if (JSON.stringify(prevT) !== JSON.stringify(cloudT)) {
+                localStorage.setItem('fin_transactions', JSON.stringify(cloudT));
+                localStorage.setItem('fin_initialized', 'true');
+                return cloudT;
+              }
+              return prevT;
+            });
+
+            setTemplates((prevTpl) => {
+              if (JSON.stringify(prevTpl) !== JSON.stringify(cloudTpl)) {
+                localStorage.setItem('fin_templates', JSON.stringify(cloudTpl));
+                return cloudTpl;
+              }
+              return prevTpl;
+            });
+          }
+        }, (error) => {
+          console.error("Erro no real-time sync do Firestore: ", error);
+        });
+      });
+    });
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [currentUser]);
+
   // Check and trigger auto-cloning whenever the viewed month changes
   useEffect(() => {
     if (!currentMonth || transactions.length === 0 || templates.length === 0) return;
@@ -71,6 +133,15 @@ export default function App() {
       if (clonedTransactions.length !== transactions.length) {
         setTransactions(clonedTransactions);
         localStorage.setItem('fin_transactions', JSON.stringify(clonedTransactions));
+        localStorage.setItem('fin_initialized', 'true');
+        
+        if (currentUser) {
+          import('./firebase').then(({ uploadToCloud }) => {
+            uploadToCloud(currentUser.uid, { transactions: clonedTransactions, templates }).catch(err => {
+              console.error("Erro ao sincronizar transações auto-clonadas: ", err);
+            });
+          });
+        }
         
         if (message) {
           triggerToast(message);
@@ -82,7 +153,7 @@ export default function App() {
     const updatedSettings = { ...settings, lastActiveMonth: currentMonth };
     setSettings(updatedSettings);
     localStorage.setItem('fin_settings', JSON.stringify(updatedSettings));
-  }, [currentMonth, templates]);
+  }, [currentMonth, templates, currentUser]);
 
   const triggerToast = (msg: string) => {
     setToast(msg);
@@ -93,11 +164,26 @@ export default function App() {
   const saveTransactions = (updated: Transaction[]) => {
     setTransactions(updated);
     localStorage.setItem('fin_transactions', JSON.stringify(updated));
+    localStorage.setItem('fin_initialized', 'true');
+    if (currentUser) {
+      import('./firebase').then(({ uploadToCloud }) => {
+        uploadToCloud(currentUser.uid, { transactions: updated, templates }).catch(err => {
+          console.error("Erro ao salvar transações na nuvem: ", err);
+        });
+      });
+    }
   };
 
   const saveTemplates = (updated: FixedTemplate[]) => {
     setTemplates(updated);
     localStorage.setItem('fin_templates', JSON.stringify(updated));
+    if (currentUser) {
+      import('./firebase').then(({ uploadToCloud }) => {
+        uploadToCloud(currentUser.uid, { transactions, templates: updated }).catch(err => {
+          console.error("Erro ao salvar modelos na nuvem: ", err);
+        });
+      });
+    }
   };
 
   const saveSettings = (updated: AppSettings) => {
