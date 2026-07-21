@@ -1,9 +1,9 @@
 {
-  "apiKey": "",
-  "authDomain": "",
-  "projectId": "",
-  "storageBucket": "",
-  "messagingSenderId": "",
-  "appId": "",
+  "apiKey": "AIzaSyBVN7xd8BpXB2bhuxgwgkdZn4WLMNrYxXs",
+  "authDomain": "receitas-despesas-12e94.firebaseapp.com",
+  "projectId": "receitas-despesas-12e94",
+  "storageBucket": "receitas-despesas-12e94.firebasestorage.app",
+  "messagingSenderId": "372399960675",
+  "appId": "1:372399960675:web:74a5bee3ef5b86cf0dfe56",
   "firestoreDatabaseId": ""
 }

@@ -36,6 +36,21 @@ export default function App() {
 
   // User Authentication State
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+
+  // Monitor network connectivity
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   // UI/Navigation States
   const [currentMonth, setCurrentMonth] = useState<string>('');
@@ -504,6 +519,66 @@ export default function App() {
 
         </div>
       </header>
+
+      {/* Real-time Sync Status Bar */}
+      {isFirebaseConfigured && (
+        <div className="bg-slate-100 border-b border-slate-200 py-2 px-4 sm:px-6 lg:px-8 text-[11px] font-medium text-slate-600">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              {currentUser ? (
+                isOnline ? (
+                  <span className="flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span className="font-bold">Nuvem Online & Ativa</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1.5 text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-100">
+                    <span className="relative flex h-2 w-2">
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                    </span>
+                    <span className="font-bold">Offline temporário</span>
+                  </span>
+                )
+              ) : (
+                <span className="flex items-center gap-1.5 text-slate-500 bg-slate-200/50 px-2 py-0.5 rounded border border-slate-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                  <span>Operando em Modo Local</span>
+                </span>
+              )}
+
+              <span className="hidden sm:inline text-slate-300">|</span>
+
+              <span className="text-slate-500 font-medium truncate max-w-[280px] sm:max-w-md">
+                {currentUser ? (
+                  <>
+                    Conta conectada: <strong className="text-slate-700">{currentUser.email}</strong>
+                  </>
+                ) : (
+                  "Seus dados estão sendo guardados de forma segura apenas neste navegador."
+                )}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0 text-slate-400 text-[10px]">
+              {currentUser ? (
+                <span className="text-indigo-600 bg-indigo-50 font-bold px-2 py-0.5 rounded border border-indigo-100">
+                  Sincronização 100% Automática & Imediata
+                </span>
+              ) : (
+                <button 
+                  onClick={() => setActiveTab('backup')} 
+                  className="text-indigo-600 hover:text-indigo-700 hover:underline transition-colors font-bold"
+                >
+                  Clique aqui para ativar a Sincronização em Nuvem
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Body */}
       <main className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
