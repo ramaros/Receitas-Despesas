@@ -304,6 +304,38 @@ export default function App() {
     triggerToast('Modelo fixo removido.');
   };
 
+  const handleApplyTemplatesToCurrentMonth = () => {
+    if (!currentMonth || templates.length === 0) return;
+
+    const activeTemplates = templates.filter(t => t.isActive);
+    const currentMonthTransactions = transactions.filter(t => t.monthYear === currentMonth);
+    
+    // Find templates that are not yet in the current month's transactions (by name)
+    const missingTemplates = activeTemplates.filter(
+      tpl => !currentMonthTransactions.some(t => t.name.toLowerCase() === tpl.name.toLowerCase())
+    );
+
+    if (missingTemplates.length === 0) {
+      triggerToast('Todos os modelos ativos já estão lançados neste mês!');
+      return;
+    }
+
+    const newTransactions: Transaction[] = missingTemplates.map((template, idx) => ({
+      id: `cloned-${currentMonth}-${template.id}-${Date.now()}-${idx}`,
+      name: template.name,
+      amount: template.amount,
+      type: template.type,
+      isPaid: false,
+      monthYear: currentMonth,
+      isRecurring: true,
+      createdAt: Date.now() + idx
+    }));
+
+    const updated = [...transactions, ...newTransactions];
+    saveTransactions(updated);
+    triggerToast(`${newTransactions.length} modelo(s) fixo(s) lançado(s) no mês de ${formatMonthYear(currentMonth)} com sucesso!`);
+  };
+
   // PIN Operations
   const handleSetupPin = (newPin: string) => {
     const updated = {
@@ -666,6 +698,7 @@ export default function App() {
               onAddTemplate={handleAddTemplate}
               onToggleTemplate={handleToggleTemplate}
               onDeleteTemplate={handleDeleteTemplate}
+              onApplyTemplatesToCurrentMonth={handleApplyTemplatesToCurrentMonth}
             />
           )}
 

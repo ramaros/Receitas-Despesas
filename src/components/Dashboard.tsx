@@ -16,6 +16,7 @@ interface DashboardProps {
   onAddTemplate: (name: string, amount: number, type: 'receita' | 'despesa') => void;
   onToggleTemplate: (id: string) => void;
   onDeleteTemplate: (id: string) => void;
+  onApplyTemplatesToCurrentMonth?: () => void;
 }
 
 export default function Dashboard({
@@ -28,12 +29,20 @@ export default function Dashboard({
   onAddTemplate,
   onToggleTemplate,
   onDeleteTemplate,
+  onApplyTemplatesToCurrentMonth,
 }: DashboardProps) {
   // Local state for adding a template directly
   const [showAddTemplate, setShowAddTemplate] = useState(false);
   const [templateName, setTemplateName] = useState('');
   const [templateAmount, setTemplateAmount] = useState('');
   const [templateType, setTemplateType] = useState<'receita' | 'despesa'>('despesa');
+
+  // Find templates that are active but don't have a transaction with the same name in the current month
+  const activeTemplates = templates.filter(t => t.isActive);
+  const currentMonthTransactionsForSync = transactions.filter(t => t.monthYear === currentMonth);
+  const missingTemplates = activeTemplates.filter(
+    tpl => !currentMonthTransactionsForSync.some(t => t.name.toLowerCase() === tpl.name.toLowerCase())
+  );
 
   const handleTemplateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -970,6 +979,32 @@ export default function Dashboard({
             Cadastrar Item Fixo
           </button>
         </div>
+
+        {/* Banner with sync action if there are active templates not in this month */}
+        {missingTemplates.length > 0 && onApplyTemplatesToCurrentMonth && (
+          <motion.div
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-800"
+          >
+            <div className="flex items-start gap-2.5">
+              <AlertTriangle className="w-4.5 h-4.5 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold">Modelos recorrentes não aplicados ao mês atual</p>
+                <p className="text-amber-700 mt-0.5 leading-relaxed">
+                  Existem <strong>{missingTemplates.length} modelo(s) fixo(s) ativo(s)</strong> que ainda não constam como lançamentos em {formatMonthYear(currentMonth)} (pois este mês já possuía lançamentos quando esses modelos foram criados ou ativados).
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onApplyTemplatesToCurrentMonth}
+              className="px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold transition-all active:scale-95 shrink-0 whitespace-nowrap shadow-sm shadow-amber-600/10 cursor-pointer"
+            >
+              Lançar no mês atual
+            </button>
+          </motion.div>
+        )}
 
         {/* Add Template Inline Form */}
         {showAddTemplate && (
