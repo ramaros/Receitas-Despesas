@@ -1,12 +1,12 @@
 {
-  "projectId": "analytical-falcon-sskkt",
-  "appId": "1:497656025148:web:172d7f13ae7fc1e686f339",
-  "apiKey": "AIzaSyAhmixqf1xtZbZ8haJHl2iLsxb26gfzBA0",
-  "authDomain": "analytical-falcon-sskkt.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-controlededespes-f25a209a-f4c1-49c6-93fd-3ff260c7575e",
-  "storageBucket": "analytical-falcon-sskkt.firebasestorage.app",
-  "messagingSenderId": "497656025148",
+  "projectId": "receitas-despesas-12e94",
+  "appId": "1:372399960675:web:74a5bee3ef5b86cf0dfe56",
+  "apiKey": "AIzaSyBVN7xd8BpXB2bhuxgwgkdZn4WLMNrYxXs",
+  "authDomain": "receitas-despesas-12e94.firebaseapp.com",
+  "firestoreDatabaseId": "",
+  "storageBucket": "receitas-despesas-12e94.firebasestorage.app",
+  "messagingSenderId": "372399960675",
   "measurementId": "",
-  "oAuthClientId": "497656025148-e79slitk4jbqfr0jhcpfhem5abh60mv1.apps.googleusercontent.com",
+  "oAuthClientId": "",
   "recaptchaSiteKey": ""
 }
