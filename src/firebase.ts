@@ -1,7 +1,7 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
-import firebaseConfigJson from './firebase-applet-config.json';
+import firebaseConfigJson from '../firebase-applet-config.json';
 
 const metaEnv = (import.meta as any).env || {};
 
